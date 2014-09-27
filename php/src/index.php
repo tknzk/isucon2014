@@ -67,7 +67,18 @@ if ($succeeded) {
  function success_login($login,$user_id) {
     $db = option('db_conn');
 
-    $stmt = $db->prepare('UPDATE users SET `last_logined_at` = NOW(), `last_logined_ip` = :ip WHERE id = :user_id');
+
+  $stmt = $db->prepare('SELECT * FROM users WHERE id = :id');
+  $stmt->bindValue(':id', $user_id);
+  $stmt->execute();
+  $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user['last_logined_ip']) {
+      $stmt = $db->prepare('UPDATE users SET `last_logined_ip_x` = :xx, `last_logined_at` = NOW(), `last_logined_ip` = :ip WHERE id = :user_id');
+      $stmt->bindValue(':xx', $user['last_logined_ip']);
+    } else {
+      $stmt = $db->prepare('UPDATE users SET `last_logined_at` = NOW(), `last_logined_ip` = :ip WHERE id = :user_id');
+    }
     $stmt->bindValue(':user_id', $user_id);
     $stmt->bindValue(':ip', $_SERVER['REMOTE_ADDR']);
     $stmt->execute();
@@ -156,15 +167,14 @@ function last_login() {
   if (empty($user)) {
     return null;
   }
-  return $user;
 
-  //$db = option('db_conn');
+  $db = option('db_conn');
 
-  //$stmt = $db->prepare('SELECT * FROM login_log WHERE succeeded = 1 AND user_id = :id ORDER BY id DESC LIMIT 2');
-  //$stmt->bindValue(':id', $user['id']);
-  //$stmt->execute();
-  //$stmt->fetch();
-  //return $stmt->fetch(PDO::FETCH_ASSOC);
+  $stmt = $db->prepare('SELECT * FROM login_log WHERE succeeded = 1 AND user_id = :id ORDER BY id DESC LIMIT 2');
+  $stmt->bindValue(':id', $user['id']);
+  $stmt->execute();
+  $stmt->fetch();
+  return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 function banned_ips() {
@@ -263,7 +273,13 @@ dispatch_get('/mypage', function() {
   }
   else {
     set('user', $user);
-    set('last_login', last_login());
+    if ($user['last_logined_ip'] != $_SERVER['REMOTE_ADDR']) {
+    	set('last_login', last_login());
+       set('last', true);
+    } else {
+    	set('last_login', $user);
+       set('last', false);
+    }
     return html('mypage.html.php');
   }
 });
