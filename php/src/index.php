@@ -60,7 +60,18 @@ function login_log($succeeded, $login, $user_id=null) {
   $stmt->bindValue(':ip', $_SERVER['REMOTE_ADDR']);
   $stmt->bindValue(':succeeded', $succeeded ? 1 : 0);
   $stmt->execute();
+if ($succeeded) {
+      success_login($login, $user_id);
 }
+}
+ function success_login($login,$user_id) {
+    $db = option('db_conn');
+
+    $stmt = $db->prepare('UPDATE users SET `last_logined_at` = NOW(), `last_logined_ip` = :ip WHERE id = :user_id');
+    $stmt->bindValue(':user_id', $user_id);
+    $stmt->bindValue(':ip', $_SERVER['REMOTE_ADDR']);
+    $stmt->execute();
+  }
 
 function user_locked($user) {
   if (empty($user)) { return null; }
@@ -107,6 +118,7 @@ function attempt_login($login, $password) {
 
   if (!empty($user) && calculate_password_hash($password, $user['salt']) == $user['password_hash']) {
     login_log(true, $login, $user['id']);
+      //success_login($login, $user['id']);
     return ['user' => $user];
   }
   elseif (!empty($user)) {
@@ -144,14 +156,15 @@ function last_login() {
   if (empty($user)) {
     return null;
   }
+  return $user;
 
-  $db = option('db_conn');
+  //$db = option('db_conn');
 
-  $stmt = $db->prepare('SELECT * FROM login_log WHERE succeeded = 1 AND user_id = :id ORDER BY id DESC LIMIT 2');
-  $stmt->bindValue(':id', $user['id']);
-  $stmt->execute();
-  $stmt->fetch();
-  return $stmt->fetch(PDO::FETCH_ASSOC);
+  //$stmt = $db->prepare('SELECT * FROM login_log WHERE succeeded = 1 AND user_id = :id ORDER BY id DESC LIMIT 2');
+  //$stmt->bindValue(':id', $user['id']);
+  //$stmt->execute();
+  //$stmt->fetch();
+  //return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 function banned_ips() {

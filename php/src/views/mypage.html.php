@@ -5,9 +5,9 @@
 
 <dl class="dl-horizontal">
   <dt>前回ログイン</dt>
-  <dd id="last-logined-at"><?php echo get('last_login')['created_at'] ?></dd>
+  <dd id="last-logined-at"><?php echo get('last_login')['last_logined_at'] ?></dd>
   <dt>最終ログインIPアドレス</dt>
-  <dd id="last-logined-ip"><?php echo get('last_login')['ip'] ?></dd>
+  <dd id="last-logined-ip"><?php echo get('last_login')['last_logined_ip'] ?></dd>
 </dl>
 
 <div class="panel panel-default">
