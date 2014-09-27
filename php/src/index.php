@@ -1,6 +1,6 @@
 <?php
 require_once 'limonade/lib/limonade.php';
-require_once 'limonade/redisW.class.php';
+require_once 'redisW.class.php';
 
 function configure() {
   option('base_uri', '/');
