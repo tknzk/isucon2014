@@ -4,18 +4,18 @@ class redisW
 {
     private static $_redis = null;
 
-    function getInstance()
+    public static function getInstance()
     {
         return new redisW();
     }
 
-    private function __constract()
+    private function __construct()
     {
         if (!$this->_redis) {
             $this->_redis = new Redis();
             $this->_redis->connect('127.0.0.1', 6379);
         }
 
-        return $this;
+        return $this->_redis;
     }
 }
