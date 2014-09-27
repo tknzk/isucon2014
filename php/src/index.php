@@ -72,7 +72,10 @@ function user_locked($user) {
   $log = $stmt->fetch(PDO::FETCH_ASSOC);
 
   $config = option('config');
-  return $config['user_lock_threshold'] <= $log['failures'];
+  if ($res = $config['user_lock_threshold'] <= $log['failures']) {
+      redisW::getInstance()->set('locked.'.$user['id'], true);
+  }
+  return $res;
 }
 
 # FIXME
