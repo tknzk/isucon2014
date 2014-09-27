@@ -65,6 +65,10 @@ function login_log($succeeded, $login, $user_id=null) {
 function user_locked($user) {
   if (empty($user)) { return null; }
 
+  if ($res = redisW::getInstance()->get('locked.'.$user['id'])) {
+      return $res;
+  }
+
   $db = option('db_conn');
   $stmt = $db->prepare('SELECT COUNT(1) AS failures FROM login_log WHERE user_id = :user_id AND id > IFNULL((select id from login_log where user_id = :user_id AND succeeded = 1 ORDER BY id DESC LIMIT 1), 0)');
   $stmt->bindValue(':user_id', $user['id']);
