@@ -49,7 +49,14 @@ function before() {
 }
 
 function calculate_password_hash($password, $salt) {
-  return hash('sha256', $password . ':' . $salt);
+
+  if ($res = redisW::getInstance()->get('password_hash.'.$password.$salt)) {
+      return $res;
+  }
+
+  $res = hash('sha256', $password . ':' . $salt);
+  redisW::getInstance()->set('password_hash.'.$password.$salt, $res);
+  return $res;
 }
 
 function login_log($succeeded, $login, $user_id=null) {
