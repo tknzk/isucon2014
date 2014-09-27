@@ -9,7 +9,7 @@ class redisW
         return self::__constract();
     }
 
-    private function __constract()
+    private static function __constract()
     {
         if (!$this->_redis) {
             $this->_redis = new Redis();
