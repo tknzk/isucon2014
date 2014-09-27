@@ -1,5 +1,6 @@
 <?php
 require_once 'limonade/lib/limonade.php';
+require_once 'redisW.class.php';
 
 function configure() {
   option('base_uri', '/');
@@ -86,6 +87,10 @@ function login_log($succeeded, $login, $user_id=null) {
 function user_locked($user) {
   if (empty($user)) { return null; }
 
+  if ($res = redisW::getInstance()->get('locked.'.$user['id'])) {
+      return $res;
+  }
+
   $db = option('db_conn');
   $stmt = $db->prepare('SELECT COUNT(1) AS failures FROM login_log WHERE user_id = :user_id AND id > IFNULL((select id from login_log where user_id = :user_id AND succeeded = 1 ORDER BY id DESC LIMIT 1), 0)');
   $stmt->bindValue(':user_id', $user['id']);
@@ -93,11 +98,18 @@ function user_locked($user) {
   $log = $stmt->fetch(PDO::FETCH_ASSOC);
 
   $config = option('config');
-  return $config['user_lock_threshold'] <= $log['failures'];
+  if ($res = $config['user_lock_threshold'] <= $log['failures']) {
+      redisW::getInstance()->set('locked.'.$user['id'], $res);
+  }
+  return $res;
 }
 
 # FIXME
 function ip_banned() {
+
+  if ($res = redisW::getInstance()->get('ip_banned.'.$_SERVER['REMOTE_ADDR'])) {
+      return $res;
+  }
   $db = option('db_conn');
   $stmt = $db->prepare('SELECT COUNT(1) AS failures FROM login_log WHERE ip = :ip AND id > IFNULL((select id from login_log where ip = :ip AND succeeded = 1 ORDER BY id DESC LIMIT 1), 0)');
   $stmt->bindValue(':ip', $_SERVER['REMOTE_ADDR']);
@@ -105,7 +117,11 @@ function ip_banned() {
   $log = $stmt->fetch(PDO::FETCH_ASSOC);
 
   $config = option('config');
-  return $config['ip_ban_threshold'] <= $log['failures'];
+
+  if ($res = $config['ip_ban_threshold'] <= $log['failures']) {
+      redisW::getInstance()->set('ip_banned.'.$_SERVER['REMOTE_ADDR'], $res);
+  }
+  return $res;
 }
 
 function attempt_login($login, $password) {
