@@ -2,7 +2,7 @@
 
 class redisW
 {
-    private static $_redis = null;
+    private $_redis;
 
     public static function getInstance()
     {
@@ -16,6 +16,16 @@ class redisW
             $this->_redis->connect('127.0.0.1', 6379);
         }
 
-        return $this->_redis;
+        return $this;
+    }
+
+    public function get($key)
+    {
+        return $this->_redis->get($key);
+    }
+
+    public function set($key, $value)
+    {
+        return $this->_redis->set($key, $value);
     }
 }
