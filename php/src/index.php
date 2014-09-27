@@ -60,7 +60,28 @@ function login_log($succeeded, $login, $user_id=null) {
   $stmt->bindValue(':ip', $_SERVER['REMOTE_ADDR']);
   $stmt->bindValue(':succeeded', $succeeded ? 1 : 0);
   $stmt->execute();
+  if ($succeeded) {
+      success_login($login, $user_id);
+  }
 }
+ function success_login($login,$user_id) {
+    $db = option('db_conn');
+
+    $stmt = $db->prepare('SELECT * FROM users WHERE id = :id');
+    $stmt->bindValue(':id', $user_id);
+    $stmt->execute();
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user['last_logined_ip']) {
+        $stmt = $db->prepare('UPDATE users SET `last_logined_ip_x` = :xx, `last_logined_at` = NOW(), `last_logined_ip` = :ip WHERE id = :user_id');
+        $stmt->bindValue(':xx', $user['last_logined_ip']);
+    } else {
+        $stmt = $db->prepare('UPDATE users SET `last_logined_at` = NOW(), `last_logined_ip` = :ip WHERE id = :user_id');
+    }
+    $stmt->bindValue(':user_id', $user_id);
+    $stmt->bindValue(':ip', $_SERVER['REMOTE_ADDR']);
+    $stmt->execute();
+  }
 
 function user_locked($user) {
   if (empty($user)) { return null; }
@@ -139,20 +160,20 @@ function current_user() {
   return $user;
 }
 
-function last_login() {
-  $user = current_user();
-  if (empty($user)) {
-    return null;
-  }
-
-  $db = option('db_conn');
-
-  $stmt = $db->prepare('SELECT * FROM login_log WHERE succeeded = 1 AND user_id = :id ORDER BY id DESC LIMIT 2');
-  $stmt->bindValue(':id', $user['id']);
-  $stmt->execute();
-  $stmt->fetch();
-  return $stmt->fetch(PDO::FETCH_ASSOC);
-}
+//function last_login() {
+//  $user = current_user();
+//  if (empty($user)) {
+//    return null;
+//  }
+//
+//  $db = option('db_conn');
+//
+//  $stmt = $db->prepare('SELECT * FROM login_log WHERE succeeded = 1 AND user_id = :id ORDER BY id DESC LIMIT 2');
+//  $stmt->bindValue(':id', $user['id']);
+//  $stmt->execute();
+//  $stmt->fetch();
+//  return $stmt->fetch(PDO::FETCH_ASSOC);
+//}
 
 function banned_ips() {
   $threshold = option('config')['ip_ban_threshold'];
@@ -249,8 +270,8 @@ dispatch_get('/mypage', function() {
     return redirect_to('/');
   }
   else {
-    set('user', $user);
-    set('last_login', last_login());
+    set('user',         $user);
+    set('last_login',   $user);
     return html('mypage.html.php');
   }
 });
