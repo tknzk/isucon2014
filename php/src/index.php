@@ -61,24 +61,23 @@ function login_log($succeeded, $login, $user_id=null) {
   $stmt->bindValue(':ip', $_SERVER['REMOTE_ADDR']);
   $stmt->bindValue(':succeeded', $succeeded ? 1 : 0);
   $stmt->execute();
-if ($succeeded) {
+  if ($succeeded) {
       success_login($login, $user_id);
-}
+  }
 }
  function success_login($login,$user_id) {
     $db = option('db_conn');
 
-
-  $stmt = $db->prepare('SELECT * FROM users WHERE id = :id');
-  $stmt->bindValue(':id', $user_id);
-  $stmt->execute();
-  $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt = $db->prepare('SELECT * FROM users WHERE id = :id');
+    $stmt->bindValue(':id', $user_id);
+    $stmt->execute();
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user['last_logined_ip']) {
-      $stmt = $db->prepare('UPDATE users SET `last_logined_ip_x` = :xx, `last_logined_at` = NOW(), `last_logined_ip` = :ip WHERE id = :user_id');
-      $stmt->bindValue(':xx', $user['last_logined_ip']);
+        $stmt = $db->prepare('UPDATE users SET `last_logined_ip_x` = :xx, `last_logined_at` = NOW(), `last_logined_ip` = :ip WHERE id = :user_id');
+        $stmt->bindValue(':xx', $user['last_logined_ip']);
     } else {
-      $stmt = $db->prepare('UPDATE users SET `last_logined_at` = NOW(), `last_logined_ip` = :ip WHERE id = :user_id');
+        $stmt = $db->prepare('UPDATE users SET `last_logined_at` = NOW(), `last_logined_ip` = :ip WHERE id = :user_id');
     }
     $stmt->bindValue(':user_id', $user_id);
     $stmt->bindValue(':ip', $_SERVER['REMOTE_ADDR']);
@@ -145,7 +144,6 @@ function attempt_login($login, $password) {
 
   if (!empty($user) && calculate_password_hash($password, $user['salt']) == $user['password_hash']) {
     login_log(true, $login, $user['id']);
-      //success_login($login, $user['id']);
     return ['user' => $user];
   }
   elseif (!empty($user)) {
@@ -288,14 +286,8 @@ dispatch_get('/mypage', function() {
     return redirect_to('/');
   }
   else {
-    set('user', $user);
-    if ($user['last_logined_ip'] != $_SERVER['REMOTE_ADDR']) {
-    	set('last_login', last_login());
-       set('last', true);
-    } else {
-    	set('last_login', $user);
-       set('last', false);
-    }
+    set('user',         $user);
+    set('last_login',   $user);
     return html('mypage.html.php');
   }
 });
