@@ -77,13 +77,17 @@ function user_locked($user) {
 
   $config = option('config');
   if ($res = $config['user_lock_threshold'] <= $log['failures']) {
-      redisW::getInstance()->set('locked.'.$user['id'], true);
+      redisW::getInstance()->set('locked.'.$user['id'], $res);
   }
   return $res;
 }
 
 # FIXME
 function ip_banned() {
+
+  if ($res = redisW::getInstance()->get('ip_banned.'.$_SERVER['REMOTE_ADDR'])) {
+      return $res;
+  }
   $db = option('db_conn');
   $stmt = $db->prepare('SELECT COUNT(1) AS failures FROM login_log WHERE ip = :ip AND id > IFNULL((select id from login_log where ip = :ip AND succeeded = 1 ORDER BY id DESC LIMIT 1), 0)');
   $stmt->bindValue(':ip', $_SERVER['REMOTE_ADDR']);
@@ -91,7 +95,11 @@ function ip_banned() {
   $log = $stmt->fetch(PDO::FETCH_ASSOC);
 
   $config = option('config');
-  return $config['ip_ban_threshold'] <= $log['failures'];
+
+  if ($res = $config['ip_ban_threshold'] <= $log['failures']) {
+      redisW::getInstance()->set('ip_banned.'.$_SERVER['REMOTE_ADDR'], $res);
+  }
+  return $res;
 }
 
 function attempt_login($login, $password) {
