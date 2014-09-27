@@ -160,20 +160,20 @@ function current_user() {
   return $user;
 }
 
-function last_login() {
-  $user = current_user();
-  if (empty($user)) {
-    return null;
-  }
-
-  $db = option('db_conn');
-
-  $stmt = $db->prepare('SELECT * FROM login_log WHERE succeeded = 1 AND user_id = :id ORDER BY id DESC LIMIT 2');
-  $stmt->bindValue(':id', $user['id']);
-  $stmt->execute();
-  $stmt->fetch();
-  return $stmt->fetch(PDO::FETCH_ASSOC);
-}
+//function last_login() {
+//  $user = current_user();
+//  if (empty($user)) {
+//    return null;
+//  }
+//
+//  $db = option('db_conn');
+//
+//  $stmt = $db->prepare('SELECT * FROM login_log WHERE succeeded = 1 AND user_id = :id ORDER BY id DESC LIMIT 2');
+//  $stmt->bindValue(':id', $user['id']);
+//  $stmt->execute();
+//  $stmt->fetch();
+//  return $stmt->fetch(PDO::FETCH_ASSOC);
+//}
 
 function banned_ips() {
   $threshold = option('config')['ip_ban_threshold'];
