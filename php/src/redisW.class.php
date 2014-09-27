@@ -6,10 +6,10 @@ class redisW
 
     function getInstance()
     {
-        return self::__constract();
+        return new redisW();
     }
 
-    private static function __constract()
+    private function __constract()
     {
         if (!$this->_redis) {
             $this->_redis = new Redis();
